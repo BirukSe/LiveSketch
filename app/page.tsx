@@ -1,7 +1,124 @@
 "use client"
 import Image from "next/image";
-import { signIn } from "@/lib/auth-client";
+import { signIn, signUp } from "@/lib/auth-client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
 export default function Home() {
+  const router=useRouter();
+  const [toSignup, setToSignup]=useState(false);
+  const [toLogin, setToLogin]=useState(true);
+  const [email, setEmail]=useState("");
+  const [name, setName]=useState("");
+  const [isLoading, setIsLoading]=useState(false);
+  
+  const [password, setPassword]=useState("");
+  const handleSignup = async () => {
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await signUp.email(
+        {
+          email,
+          password,
+          name,
+        },
+        {
+          onRequest: () => setIsLoading(true),
+          onSuccess: () => {
+            setIsLoading(false);
+            router.push("/draw");
+          },
+          onError: (ctx) => {
+            setIsLoading(false);
+            if (ctx && ctx.error) {
+              console.error("Signup error:", ctx.error);
+              alert(ctx.error.message);
+            } else {
+              alert("An unknown error occurred during signup.");
+            }
+          },
+        }
+      );
+      
+      if (error) {
+        console.error("Error signing up:", error);
+        alert(error.message);
+      }
+    } catch (err) {
+      setIsLoading(false);
+      console.error("Unexpected error:", err);
+      alert("Something went wrong. Please try again.");
+    }
+  };
+  
+  const handleLogin = async () => {
+    try {
+      setIsLoading(true);
+  
+      const { data, error } = await signIn.email(
+        {
+          email,
+          password,
+          callbackURL: "/draw"
+        },{}
+        // {
+        //   onRequest: () => setIsLoading(true),
+        //   onSuccess: (ctx) => {
+        //     setIsLoading(false);
+        //     console.log("Login successful:", ctx);
+        //     alert("Login successful!");
+        //     router.push("/dashboard"); // Redirect to a page after login
+        //   },
+        //   onError: (ctx) => {
+        //     setIsLoading(false);
+        //     console.error("Login error:", ctx);
+  
+        //     // Check the error object more closely
+        //     if (ctx?.error) {
+        //       console.log("Error details:", ctx.error);
+        //       alert(ctx.error.message || "Login failed. Please try again.");
+        //     } else {
+        //       console.log("Unknown error:", ctx);
+        //       alert("Login failed. Please try again.");
+        //     }
+        //   },
+        // }
+      );
+  
+      // Check the API response
+      console.log("API Login Response:", data);
+  
+    } catch (err) {
+      setIsLoading(false);
+      console.error("Unexpected error:", err);
+      alert("Something went wrong. Please try again.");
+    }
+  };
+  
+  
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+   
   return (
    <div className="min-h-screen min-w-screen w-full bg-slate-100">
     <div className="flex">
@@ -43,7 +160,7 @@ export default function Home() {
     <div className="w-full h-px bg-gray-300"></div>
     <span className="absolute bg-white px-2 text-gray-500">OR</span>
   </div>
-  <form className="w-full px-12 space-y-4 mt-6">
+  <form className={toLogin?"w-full px-12 space-y-4 mt-6":"hidden"}>
     <div>
       <label htmlFor="email" className="block text-black text-lg">Email</label>
       <input
@@ -51,6 +168,51 @@ export default function Home() {
         type="email"
         placeholder="m@example.com"
         className="w-full px-4 py-3 border rounded text-black focus:outline-none focus:ring-2 focus:ring-gray-900"
+        value={email}
+        onChange={(e)=>setEmail(e.target.value)}
+      />
+    </div>
+    <div>
+      <label htmlFor="password" className="block text-black text-lg">Password</label>
+      <input
+        name="password"
+        type="password"
+        placeholder="qwerty"
+        value={password}
+        onChange={(e)=>setPassword(e.target.value)}
+        className="w-full px-4 py-3 border rounded text-black focus:outline-none focus:ring-2 focus:ring-gray-900"
+      />
+    </div>
+    <button className="w-full bg-black text-white py-3 rounded text-lg font-bold hover:bg-gray-800" onClick={handleLogin}>{isLoading?"Logging in...":"Login"}</button>
+    <p onClick={()=>{
+       setPassword("");
+       setEmail("");
+       setToLogin(false);
+       setToSignup(true)
+
+    }} className="text-black hover:text-blue-500 cursor-pointer">Dont have an account? </p>
+  </form>
+  <form className={toSignup?"w-full px-12 space-y-4 mt-6":"hidden"}>
+  <div>
+      <label htmlFor="email" className="block text-black text-lg">Name</label>
+      <input
+        name="name"
+        type="text"
+        placeholder="biruke"
+        className="w-full px-4 py-3 border rounded text-black focus:outline-none focus:ring-2 focus:ring-gray-900"
+        value={name}
+        onChange={(e)=>setName(e.target.value)}
+      />
+    </div>
+    <div>
+      <label htmlFor="email" className="block text-black text-lg">Email</label>
+      <input
+        name="email"
+        type="email"
+        placeholder="m@example.com"
+        className="w-full px-4 py-3 border rounded text-black focus:outline-none focus:ring-2 focus:ring-gray-900"
+        value={email}
+        onChange={(e)=>setEmail(e.target.value)}
       />
     </div>
     <div>
@@ -60,9 +222,17 @@ export default function Home() {
         type="password"
         placeholder="qwerty"
         className="w-full px-4 py-3 border rounded text-black focus:outline-none focus:ring-2 focus:ring-gray-900"
+        value={password}
+        onChange={(e)=>setPassword(e.target.value)}
       />
     </div>
-    <button className="w-full bg-black text-white py-3 rounded text-lg font-bold hover:bg-gray-800">Login</button>
+    <button className="w-full bg-black text-white py-3 rounded text-lg font-bold hover:bg-gray-800" onClick={handleSignup}>{isLoading?"Signing up...":"Signup"}</button>
+    <p onClick={()=>{
+      setPassword("");
+      setEmail("");
+      setToSignup(false);
+      setToLogin(true);
+    }}className="text-black hover:text-blue-500 cursor-pointer">Already have an account? </p>
   </form>
 </div>
 
